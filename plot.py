@@ -12,7 +12,8 @@ import json
 import os
 import pylab
 import sys
-import urllib
+
+import urllib.request
 
 
 HOME_PATH = home = os.getenv('USERPROFILE') or os.getenv('HOME')
@@ -77,9 +78,9 @@ class PolarStats():
         has_date = True
         page = 1
         while has_date:
-            print(page)
             url = self._url.format(page=str(page))
             response = get_response(url)['results']
+
             # always get first 500 results
             has_date = True if page <= 5 else False
             for result in response:
@@ -109,13 +110,25 @@ class PolarStats():
 
     def generate_graphs(self, path):
         """Generate and save plots from data."""
-	pass
+        Ns = {'hourly': 24, 'monthly': 12}
+        for key in self._data.keys():
+            hour, values = zip*(*data[key].items())
+            radius = max(values)
+            values = [x / radius for x in values]           
+            fig = pylab.figure()
+            ax = fig.add_axes(polar=True)
+            N = Ns[key]
+            theta = numpy.arange(0.0, 2*numpy.pi, 2*numpy.pi / N)
+            width = np.pi / (2 * N)
+            bars = ax.bar(theta, radius, width=width, bottom=0.0)
+            fig.savefig(''.join([path, key, '.jpg'])
 
 
 def main():
     polar = PolarStats()
     try:
         polar.update()
+        import pudb; pudb.set_trace()
     except urllib.error.HTTPError:
         print('unable to update', file=sys.stderr)
 

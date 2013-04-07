@@ -119,11 +119,13 @@ class PolarStats():
         self.get_polar_data()
         self.save_data()
 
-    def generate_graphs(self):
+    def generate_graphs(self, path=None):
         """Generate and save plots from data.  
         See http://matplotlib.org/examples/pylab_examples/polar_bar.html 
         for more details.
         """
+
+        path = path if path else os.path.join(self._data_path, 'web')
         for key in self._data.keys():
             time, values = zip(*self._data[key].items())
             
@@ -144,7 +146,7 @@ class PolarStats():
             ax.set_xticklabels(time)
 
             filename = "{key}.png".format(key=key)
-            filename = os.path.join(self._data_path, filename)
+            filename = os.path.join(path, filename)
             fig.savefig(filename)
 
 

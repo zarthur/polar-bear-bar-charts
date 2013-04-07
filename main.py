@@ -22,10 +22,11 @@ DATA_FILE = 'data'
 DATA_FILE_PATH = os.path.join(DATA_PATH, DATA_FILE)
 
 POLAR_URL = "http://search.twitter.com/search.json"\
-           "?q=polar%20bear&result_type=mixed&rpp=100&page={page}"
+           "?q=%22polar%20bear%22&result_type=mixed&rpp=100&page={page}"
 
 if not os.path.exists(DATA_PATH):
     os.makedirs(DATA_PATH)
+
 
 def get_response(req_url, json_resp=True):
     """Get response from a sepecified URL; process JSON if response
@@ -59,10 +60,10 @@ def time_compare(result):
 
     result_time =  datetime.datetime.strptime(result['created_at'],
                                               '%a, %d %b %Y %H:%M:%S %z')
-    result_compare = (result_time.year, result_time.month, result_time.date,
+    result_compare = (result_time.year, result_time.month, result_time.day,
                       result_time.hour)
 
-    return compare_time == result_time, result_time
+    return compare_time == result_compare, result_time
 
 class PolarStats():
     """Container for data and associated methods."""
@@ -80,15 +81,15 @@ class PolarStats():
         while has_date:
             url = self._url.format(page=str(page))
             response = get_response(url)['results']
-
+            
             # always get first 500 results
             has_date = True if page <= 5 else False
             for result in response:
                 result_has_date, result_time = time_compare(result)
                 if result_has_date:
                     has_date = True
-                    self._data['monthly'][result_time[1]] += 1
-                    self._data['hourly'][result_time[-1]] += 1
+                    self._data['monthly'][result_time.month] += 1
+                    self._data['hourly'][result_time.hour] += 1
 
             page += 1
 
@@ -112,7 +113,7 @@ class PolarStats():
         """Generate and save plots from data."""
         Ns = {'hourly': 24, 'monthly': 12}
         for key in self._data.keys():
-            hour, values = zip*(*data[key].items())
+            hour, values = zip(*data[key].items())
             radius = max(values)
             values = [x / radius for x in values]           
             fig = pylab.figure()
@@ -121,18 +122,17 @@ class PolarStats():
             theta = numpy.arange(0.0, 2*numpy.pi, 2*numpy.pi / N)
             width = np.pi / (2 * N)
             bars = ax.bar(theta, radius, width=width, bottom=0.0)
-            fig.savefig(''.join([path, key, '.jpg'])
+            fig.savefig(''.join([path, key, '.jpg']))
 
 
 def main():
     polar = PolarStats()
     try:
         polar.update()
-        import pudb; pudb.set_trace()
     except urllib.error.HTTPError:
         print('unable to update', file=sys.stderr)
 
-    #polar.generate_graphs(DATA_PATH)
+    # polar.generate_graphs(DATA_PATH)
 
 if __name__ == "__main__":
     main()

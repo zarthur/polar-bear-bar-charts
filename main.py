@@ -15,19 +15,6 @@ import sys
 
 import urllib.request
 
-
-HOME_PATH = home = os.getenv('USERPROFILE') or os.getenv('HOME')
-DATA_PATH = os.path.join(HOME_PATH, '.polar-stats')
-DATA_FILE = 'data'
-DATA_FILE_PATH = os.path.join(DATA_PATH, DATA_FILE)
-
-POLAR_URL = "http://search.twitter.com/search.json"\
-           "?q=%22polar%20bear%22&result_type=mixed&rpp=100&page={page}"
-
-if not os.path.exists(DATA_PATH):
-    os.makedirs(DATA_PATH)
-
-
 def get_response(req_url, json_resp=True):
     """Get response from a sepecified URL; process JSON if response
     is JSON, else return data from URL request.
@@ -68,11 +55,20 @@ def time_compare(result):
 class PolarStats():
     """Container for data and associated methods."""
 
-    def __init__(self):
-        """Initialize data containers and set path."""
+    def __init__(self, data_path=None, url=None):
+        """Set path and source url, initialize data container."""
+        home = os.getenv('USERPROFILE') or os.getenv('HOME')
+        self._data_path = data_path if data_path else \
+                          os.path.join(home, '.polar-stats')
+        self._data_file_path = os.path.join(self._data_path, 'data')
+        if not os.path.exists(self._data_path):
+            os.makedirs(self.data_path)
+
+        self._url = url if url else "http://search.twitter.com/search.json"\
+                    "?q=%22polar%20bear%22&result_type=mixed&rpp=100"\
+                    "&page={page}"
+
         self._data = None
-        self._data_path = DATA_FILE_PATH
-        self._url = POLAR_URL
 
     def get_polar_data(self):
         """Get reddit JSON data."""
@@ -82,8 +78,8 @@ class PolarStats():
             url = self._url.format(page=str(page))
             response = get_response(url)['results']
             
-            # always get first 500 results
-            has_date = True if page <= 5 else False
+            # always get first 1000 results
+            has_date = True if page <= 10 else False
             for result in response:
                 result_has_date, result_time = time_compare(result)
                 if result_has_date:
@@ -97,11 +93,11 @@ class PolarStats():
         """Load saved data from file."""
         data_default = {'hourly': {str(x): 0 for x in range(24)},
                         'monthly': {str(x): 0 for x in range(1, 13)}}
-        self._data = load_file(self._data_path, data_default)
+        self._data = load_file(self._data_file_path, data_default)
 
     def save_data(self):
         """Save data to file."""
-        save_file(self._data_path, self._data)
+        save_file(self._data_file_path, self._data)
 
     def update(self):
         if not self._data:
@@ -109,7 +105,7 @@ class PolarStats():
         self.get_polar_data()
         self.save_data()
 
-    def generate_graphs(self, path):
+    def generate_graphs(self):
         """Generate and save plots from data."""
         Ns = {'hourly': 24, 'monthly': 12}
         for key in self._data.keys():
@@ -122,7 +118,7 @@ class PolarStats():
             theta = numpy.arange(0.0, 2*numpy.pi, 2*numpy.pi / N)
             width = np.pi / (2 * N)
             bars = ax.bar(theta, radius, width=width, bottom=0.0)
-            fig.savefig(''.join([path, key, '.jpg']))
+            fig.savefig(''.join([self._data_path, key, '.jpg']))
 
 
 def main():

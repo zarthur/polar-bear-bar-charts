@@ -68,12 +68,9 @@ class PolarStats():
 
     def __init__(self, data_path=None, url=None):
         """Set path and source url, initialize data container."""
-        home = os.getenv('USERPROFILE') or os.getenv('HOME')
-        self._data_path = data_path if data_path else \
-                          os.path.join(home, '.polar-stats')
+        file_path = os.path.dirname(os.path.realpath(__file__))
+        self._data_path = data_path if data_path else file_path
         self._data_file_path = os.path.join(self._data_path, 'data')
-        if not os.path.exists(self._data_path):
-            os.makedirs(self._data_path)
 
         self._url = url if url else "http://search.twitter.com/search.json"\
                     "?q=%22polar%20bear%22&result_type=mixed&rpp=100"\
@@ -124,8 +121,8 @@ class PolarStats():
         See http://matplotlib.org/examples/pylab_examples/polar_bar.html 
         for more details.
         """
-
         path = path if path else os.path.join(self._data_path, 'web')
+
         for key in self._data.keys():
             time, values = zip(*self._data[key].items())
             

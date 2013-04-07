@@ -11,6 +11,7 @@ import datetime
 import json
 import os
 import pylab
+import random
 import sys
 
 import urllib.request
@@ -123,17 +124,25 @@ class PolarStats():
         See http://matplotlib.org/examples/pylab_examples/polar_bar.html 
         for more details.
         """
-        Ns = {'hourly': 24, 'monthly': 12}
         for key in self._data.keys():
             time, values = zip(*self._data[key].items())
-            radius = max(values)
-            values = [x / radius for x in values]           
+            
             fig = pylab.figure()
-            ax = fig.add_axes([1, 1, 1, 1], polar=True)
-            N = Ns[key]
+            ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True)
+            
+            N = len(values)
             theta = pylab.arange(0.0, 2*pylab.pi, 2*pylab.pi / N)
-            width = pylab.pi / (2 * N)
-            bars = ax.bar(theta, values, width=width, bottom=0.0)
+            width = pylab.pi / (N / 2) 
+            bars = ax.bar(theta - width /2 , values, width=width, bottom=0.0)
+            
+            for val, bar in zip(values, bars):
+                color = [random.random() for x in range(3)]
+                bar.set_facecolor(color)
+
+            ax.set_title(key.capitalize())
+            ax.xaxis.set_major_locator(pylab.FixedLocator(theta))
+            ax.set_xticklabels(time)
+
             filename = "{key}.png".format(key=key)
             filename = os.path.join(self._data_path, filename)
             fig.savefig(filename)
@@ -147,7 +156,7 @@ def main():
     except urllib.error.HTTPError:
         print('unable to update', file=sys.stderr)
 
-    # polar.generate_graphs()
+    polar.generate_graphs()
 
 if __name__ == "__main__":
     main()

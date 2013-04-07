@@ -60,7 +60,7 @@ def time_compare(result):
                                               '%a, %d %b %Y %H:%M:%S %z')
     result_compare = (result_time.year, result_time.month, result_time.day,
                       result_time.hour)
-
+    # print(compare_time == result_compare, result_compare, compare_time)
     return compare_time == result_compare, result_time
 
 class PolarStats():
@@ -83,14 +83,14 @@ class PolarStats():
 
     def get_polar_data(self):
         """Get reddit JSON data."""
-        has_date = True
         page = 1
-        while has_date:
-            url = self._url.format(page=str(page))
-            response = get_response(url)['results']
-            
-            # always get first 1000 results
-            has_date = True if page <= 10 else False
+        while True:
+            try:
+                url = self._url.format(page=str(page))
+                response = get_response(url)['results']
+            except:
+                break
+                
             for result in response:
                 result_has_date, result_time = time_compare(result)
                 if result_has_date:

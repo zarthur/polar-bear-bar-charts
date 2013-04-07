@@ -46,7 +46,7 @@ def load_file(path, default):
     except IOError:
         data = default
 
-    return default
+    return data
 
 
 def save_file(path, content):
@@ -88,15 +88,15 @@ class PolarStats():
                 result_has_date, result_time = time_compare(result)
                 if result_has_date:
                     has_date = True
-                    self._data['monthly'][result_time.month] += 1
-                    self._data['hourly'][result_time.hour] += 1
+                    self._data['monthly'][str(result_time.month)] += 1
+                    self._data['hourly'][str(result_time.hour)] += 1
 
             page += 1
 
     def load_data(self):
         """Load saved data from file."""
-        data_default = {'hourly': {x: 0 for x in range(24)},
-                        'monthly': {x: 0 for x in range(1, 13)}}
+        data_default = {'hourly': {str(x): 0 for x in range(24)},
+                        'monthly': {str(x): 0 for x in range(1, 13)}}
         self._data = load_file(self._data_path, data_default)
 
     def save_data(self):

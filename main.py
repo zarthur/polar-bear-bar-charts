@@ -139,7 +139,7 @@ class PolarStats():
         """
         path = path if path else os.path.join(self._data_path, 'web')
 
-        titles = {'hourly': 'Hourly (Last 24 hours)',
+        titles = {'hourly': 'Hourly (UTC, Last 24 hours)',
                   'monthly': 'Monthly (Last 12 months)'}
 
         for key in self._data.keys():

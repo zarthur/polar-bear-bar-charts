@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
-"""Calculate, load, and store average polar-bear-related tweet information.
+"""Calculate, load, and store polar-bear-related tweet information.
 Requires Python 3.
 
 This should be run hourly to find new tweets.  Tweets from the previous
 hour are used.
+
+Hourly totals are replaced each day.  Monthly totals are replaced each
+year.
 """
 
 import datetime
@@ -81,6 +84,10 @@ class PolarStats():
     def get_polar_data(self):
         """Get reddit JSON data."""
         page = 1
+        hourly = 0
+        monthly = 0
+        result_time = None
+
         while True:
             try:
                 url = self._url.format(page=str(page))
@@ -96,6 +103,13 @@ class PolarStats():
                     self._data['hourly'][result_time.hour] += 1
 
             page += 1
+
+        # reset month at the beginning of the month
+        if result_time.day == 1 and result_time.hour == 0:
+            self._data['monthly'][result_time.month] = 0
+
+        self._data['monthly'][result_time.month] += monthly
+        self._data['hourly'][result_time.hour] = hourly
 
     def load_data(self):
         """Load saved data from file."""
@@ -123,6 +137,9 @@ class PolarStats():
         """
         path = path if path else os.path.join(self._data_path, 'web')
 
+        titles = {'hourly': 'Hourly (Last 24 hours)',
+                  'monthly': 'Monthly (Last 12 months)'}
+
         for key in self._data.keys():
             time, values = zip(*self._data[key].items())
             
@@ -138,7 +155,7 @@ class PolarStats():
                 color = [random.random() for x in range(3)]
                 bar.set_facecolor(color)
 
-            ax.set_title(key.capitalize())
+            ax.set_title(titles[key])
             ax.xaxis.set_major_locator(pylab.FixedLocator(theta))
             ax.set_xticklabels(time)
 

@@ -86,7 +86,9 @@ class PolarStats():
         page = 1
         hourly = 0
         monthly = 0
-        result_time = None
+        # default value for result_time, in case no results are returned
+        result_time = datetime.datetime.now(datetime.timezone.utc) -\
+                      datetime.timedelta(hours=1)
 
         while True:
             try:
@@ -103,11 +105,6 @@ class PolarStats():
                     self._data['hourly'][result_time.hour] += 1
 
             page += 1
-
-        # define result time if no results are returned
-        result_time = result_time if result_time else \
-                      datetime.datetime.now(datetime.timezone.utc) -\
-                      datetime.timedelta(hours=1)
         
         # reset month at the beginning of the month
         if result_time.day == 1 and result_time.hour == 0:

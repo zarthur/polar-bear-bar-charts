@@ -104,6 +104,11 @@ class PolarStats():
 
             page += 1
 
+        # define result time if no results are returned
+        result_time = result_time if result_time else \
+                      datetime.datetime.now(datetime.timezone.utc) -\
+                      datetime.timedelta(hours=1)
+        
         # reset month at the beginning of the month
         if result_time.day == 1 and result_time.hour == 0:
             self._data['monthly'][result_time.month] = 0

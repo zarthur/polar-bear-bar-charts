@@ -21,6 +21,7 @@ import urllib.request
 
 import yaml
 
+
 def get_response(req_url, json_resp=True):
     """Get response from a sepecified URL; process JSON if response
     is JSON, else return data from URL request.
@@ -49,6 +50,7 @@ def save_file(path, content):
     with open(path, 'w') as outfile:
         yaml.dump(content, stream=outfile)
 
+
 def time_compare(result):
     """Compare the time, in UTC, of a result with the time one hour ago,
     in UTC.  If the year, month, day, and hour are the same, return True
@@ -63,8 +65,8 @@ def time_compare(result):
                                               '%a, %d %b %Y %H:%M:%S %z')
     result_compare = (result_time.year, result_time.month, result_time.day,
                       result_time.hour)
-    # print(compare_time == result_compare, result_compare, compare_time)
-    return compare_time == result_compare, result_time
+    return compare_time == result_compare
+
 
 class PolarStats():
     """Provides methods for loading, saving, updating, and plotting data."""
@@ -83,13 +85,14 @@ class PolarStats():
 
     def get_polar_data(self):
         """Get reddit JSON data."""
-        page = 1
-        hourly = 0
-        monthly = 0
-        # default value for result_time, in case no results are returned
-        result_time = datetime.datetime.now(datetime.timezone.utc) -\
-                      datetime.timedelta(hours=1)
+        # reset month total at the beginning of the month
+        current_time = datetime.datetime.now(datetime.timezone.utc) -\
+                       datetime.timedelta(hours=1)
+        if current_time.day == 1 and current_time.hour == 0:
+            self._data['monthly'][current_time.month] = 0
 
+        page = 1
+        count = 0
         while True:
             try:
                 url = self._url.format(page=str(page))
@@ -97,20 +100,12 @@ class PolarStats():
             except:
                 break
                 
-            for result in response:
-                result_has_date, result_time = time_compare(result)
-                if result_has_date:
-                    monthly += 1
-                    hourly += 1
-
+            count += len([result for result in response 
+                          if time_compare(result)])
             page += 1
         
-        # reset month at the beginning of the month
-        if result_time.day == 1 and result_time.hour == 0:
-            self._data['monthly'][result_time.month] = 0
-
-        self._data['monthly'][result_time.month] += monthly
-        self._data['hourly'][result_time.hour] = hourly
+        self._data['monthly'][current_time.month] += count
+        self._data['hourly'][current_time.hour] = count
 
     def load_data(self):
         """Load saved data from file."""
@@ -174,6 +169,7 @@ def main():
         print('unable to update', file=sys.stderr)
 
     polar.generate_graphs()
+
 
 if __name__ == "__main__":
     main()

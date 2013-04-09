@@ -100,9 +100,8 @@ class PolarStats():
             for result in response:
                 result_has_date, result_time = time_compare(result)
                 if result_has_date:
-                    has_date = True
-                    self._data['monthly'][result_time.month] += 1
-                    self._data['hourly'][result_time.hour] += 1
+                    monthly += 1
+                    hourly += 1
 
             page += 1
         

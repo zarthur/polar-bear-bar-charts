@@ -119,7 +119,7 @@ def generate_graphs(data, path=None):
     current_time = data.pop('current_time')
     
     for key in data.keys():
-        time, values = zip(*data[key].items())
+        time, values = zip(*sorted(list(data[key].items())))
         
         fig = pylab.figure()
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True)
@@ -129,9 +129,13 @@ def generate_graphs(data, path=None):
         width = pylab.pi / (N / 2) 
         bars = ax.bar(theta - width /2 , values, width=width, bottom=0.0)
         
-        for val, bar in zip(values, bars):
+        for bartime, val, bar in zip(time, values, bars):
             color = [random.random() for x in range(3)]
             bar.set_facecolor(color)
+
+            if (key == 'hourly' and bartime == current_time.hour) or \
+                    (key == 'monthly' and bartime == current_time.month):
+                bar.set_linewidth(4)
 
         ax.set_title(titles[key])
         ax.xaxis.set_major_locator(pylab.FixedLocator(theta))

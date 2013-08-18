@@ -22,15 +22,19 @@ import urllib.request
 import yaml
 
 
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.95 Safari/537.36'
+
+
 def get_response(req_url, json_resp=True):
     """Get response from a sepecified URL; process JSON if response
     is JSON, else return data from URL request.
     """
-    request = urllib.request.Request(req_url)
+    headers = {'User-Agent': USER_AGENT}
+    request = urllib.request.Request(req_url, headers=headers)
     req_data = urllib.request.urlopen(request)
     data = json.loads(req_data.read().decode()) \
             if json_resp else req_data
-    
+
     return data
 
 
@@ -40,13 +44,13 @@ def time_compare(result, current_time):
     and the result time.
     """
 
-    compare_time = (current_time.year, current_time.month, current_time.day, 
+    compare_time = (current_time.year, current_time.month, current_time.day,
                     current_time.hour)
     result_time =  datetime.datetime.strptime(result['created_at'],
                                               '%a, %d %b %Y %H:%M:%S %z')
     result_compare = (result_time.year, result_time.month, result_time.day,
                       result_time.hour)
-    
+
     return compare_time == result_compare
 
 
@@ -66,11 +70,11 @@ def get_polar_data(data, url_template):
             response = get_response(url)['results']
         except:
             break
-            
-        count += len([result for result in response 
+
+        count += len([result for result in response
                       if time_compare(result, current_time)])
         page += 1
-    
+
     data['monthly'][current_time.month] += count
     data['hourly'][current_time.hour] = count
     data['current_time'] = current_time
@@ -110,25 +114,25 @@ def update(path, url):
 
 
 def generate_graphs(data, path=None):
-    """Generate and save plots from data.  
-    See http://matplotlib.org/examples/pylab_examples/polar_bar.html 
+    """Generate and save plots from data.
+    See http://matplotlib.org/examples/pylab_examples/polar_bar.html
     for more details.
     """
     titles = {'hourly': 'Hourly (UTC, Last 24 hours)',
               'monthly': 'Monthly (Last 12 months)'}
     current_time = data.pop('current_time')
-    
+
     for key in data.keys():
         time, values = zip(*sorted(list(data[key].items())))
-        
+
         fig = pylab.figure()
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True)
-        
+
         N = len(values)
         theta = pylab.arange(0.0, 2*pylab.pi, 2*pylab.pi / N)
-        width = pylab.pi / (N / 2) 
+        width = pylab.pi / (N / 2)
         bars = ax.bar(theta - width /2 , values, width=width, bottom=0.0)
-        
+
         for bartime, val, bar in zip(time, values, bars):
             color = [random.random() for x in range(3)]
             bar.set_facecolor(color)
